@@ -32,9 +32,9 @@ Class {
 		'Default',
 		'ListeningPort',
 		'Password',
-		'Scheduler',
 		'ServerName',
 		'ServerPort',
+		'ServerResponseProcessService',
 		'ServerSocket',
 		'Username'
 	],
@@ -129,6 +129,12 @@ ClariceApp class >> default [
 { #category : #accessing }
 ClariceApp class >> default: aClariceApp [
 	Default := aClariceApp
+]
+
+{ #category : #'class initialization' }
+ClariceApp class >> initialize [
+
+	
 ]
 
 { #category : #'as yet unclassified' }
@@ -229,6 +235,16 @@ ClariceApp class >> serverPort [
 { #category : #'as yet unclassified' }
 ClariceApp class >> serverPort: aNumber [
 	ServerPort := aNumber
+]
+
+{ #category : #accessing }
+ClariceApp class >> serverResponseProcessService [
+	^ ServerResponseProcessService
+]
+
+{ #category : #accessing }
+ClariceApp class >> serverResponseProcessService: anObject [
+	ServerResponseProcessService := anObject
 ]
 
 { #category : #accessing }
