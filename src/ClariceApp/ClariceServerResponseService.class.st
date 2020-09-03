@@ -7,7 +7,7 @@ Class {
 	#instVars : [
 		'serverSocket'
 	],
-	#category : #'ClariceApp-Clarice'
+	#category : #'ClariceApp-Core'
 }
 
 { #category : #accessing }

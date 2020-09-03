@@ -38,7 +38,7 @@ Class {
 		'UniqueInstance',
 		'Username'
 	],
-	#category : #'ClariceApp-Clarice'
+	#category : #'ClariceApp-Core'
 }
 
 { #category : #settings }
