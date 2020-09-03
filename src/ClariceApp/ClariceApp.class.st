@@ -100,17 +100,18 @@ ClariceApp class >> connect [
 			(SocketStream
 				openConnectionToHostNamed: self serverName
 				port: self serverPort).
-	"--- set socket as binary ---"
-	self serverSocket
-		binary;
-		autoFlush: true.
+
 	self connected
 		ifFalse: [ GrowlMorph
 				openWithLabel: 'Clarice'
 				contents:
 					'Failed to connect to ' , self serverName , ' using port '
 						, self serverPort asString ]
-		ifTrue: [ GrowlMorph
+		ifTrue: [ 	"--- set socket as binary ---"
+	self serverSocket
+		binary;
+		autoFlush: true.
+		GrowlMorph
 				openWithLabel: 'Clarice'
 				contents:
 					'Connected to ' , self serverName , ' using port '
@@ -133,8 +134,7 @@ ClariceApp class >> default: aClariceApp [
 
 { #category : #'class initialization' }
 ClariceApp class >> initialize [
-
-	
+self serverResponseProcessService: ClariceServerResponseService new
 ]
 
 { #category : #'as yet unclassified' }
@@ -167,9 +167,11 @@ ClariceApp class >> login [
 		nextPutAll: self username asByteArray;
 		nextPutAll: (self password size asSoulSeekByteArrayOfSize: 4);
 		nextPutAll: self password asByteArray;
+		"<--- Major version of SoulSeek --->"
 		nextPutAll: (157 asSoulSeekByteArrayOfSize: 4);
 		nextPutAll: (hash size asSoulSeekByteArrayOfSize: 4);
 		nextPutAll: hash asByteArray;
+		"<--- Minor version of SoulSeek --->"		
 		nextPutAll: (100 asSoulSeekByteArrayOfSize: 4).
 	self sendMessage: buffer contents
 ]
@@ -183,16 +185,6 @@ ClariceApp class >> menuCommandOn: aBuilder [
 		icon: (self iconNamed: #configuration);
 		parent: #Clarice)
 		action: [ (SettingBrowser forKeywords: #('claricesettings')) open ]
-]
-
-{ #category : #'instance creation' }
-ClariceApp class >> new [
-"	| instances |
-	GrowlMorph openWithContents: 'Clarice>>new'.
-	instances := self allInstances.
-	^ instances
-		ifEmpty: [ super new ]
-		ifNotEmpty: [ instances first initialize ]"
 ]
 
 { #category : #accessing }

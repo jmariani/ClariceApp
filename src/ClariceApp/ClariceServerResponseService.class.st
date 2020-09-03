@@ -28,3 +28,11 @@ ClariceServerResponseService >> setUp [
 		contents: 'Monitoring of server responses started'.
 
 ]
+
+{ #category : #stepping }
+ClariceServerResponseService >> tearDown [ 
+	super tearDown .
+	GrowlMorph
+		openWithLabel: 'Clarice'
+		contents: 'Monitoring of server responses stopped'
+]
