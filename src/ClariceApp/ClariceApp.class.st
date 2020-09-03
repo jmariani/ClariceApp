@@ -29,13 +29,13 @@ Class {
 	#name : #ClariceApp,
 	#superclass : #Object,
 	#classVars : [
-		'Default',
 		'ListeningPort',
 		'Password',
 		'ServerName',
 		'ServerPort',
 		'ServerResponseProcessService',
 		'ServerSocket',
+		'UniqueInstance',
 		'Username'
 	],
 	#category : #'ClariceApp-Clarice'
@@ -89,9 +89,8 @@ ClariceApp class >> clariceUserInfoSettingsOn: aBuilder [
 
 { #category : #ssl }
 ClariceApp class >> connect [
-	GrowlMorph
-		openWithLabel: 'Clarice'
-		contents:
+	self
+		popUp:
 			'Connecting to ' , self serverName , ' using port '
 				, self serverPort asString.
 	"--- Open the server socket ---"
@@ -100,36 +99,23 @@ ClariceApp class >> connect [
 			(SocketStream
 				openConnectionToHostNamed: self serverName
 				port: self serverPort).
-
 	self connected
-		ifFalse: [ GrowlMorph
-				openWithLabel: 'Clarice'
-				contents:
+		ifFalse: [ self
+				popUp:
 					'Failed to connect to ' , self serverName , ' using port '
 						, self serverPort asString ]
-		ifTrue: [ 	"--- set socket as binary ---"
-	self serverSocket
-		binary;
-		autoFlush: true.
-		GrowlMorph
-				openWithLabel: 'Clarice'
-				contents:
+		ifTrue: [ "--- set socket as binary ---"
+			self serverSocket
+				binary;
+				autoFlush: true.
+	self
+		popUp:
 					'Connected to ' , self serverName , ' using port '
 						, self serverPort asString ]
 ]
 
 { #category : #'as yet unclassified' }
 ClariceApp class >> connected [ 	^ ServerSocket isConnected
-]
-
-{ #category : #accessing }
-ClariceApp class >> default [
-	^ Default ifNil: [ Default := self new ]
-]
-
-{ #category : #accessing }
-ClariceApp class >> default: aClariceApp [
-	Default := aClariceApp
 ]
 
 { #category : #'class initialization' }
@@ -150,30 +136,32 @@ ClariceApp class >> listeningPort: aNumber [
 { #category : #'private protocol' }
 ClariceApp class >> login [
 	| buffer hash |
-	GrowlMorph
-		openWithLabel: 'Clarice'
-		contents: 'Logging in as ' , self username , ' with ' , self password.
+	self connected
+		ifFalse: [ self popUp: 'Socket not connected. Unable to login' ]
+		ifTrue: [ 	self
+		popUp:
+ 'Logging in as ' , self username , ' with ' , self password.
 
-	"-- Hash field: MD5 hex digest of concatenated username & password ---"
-	hash := (MD5 new hashMessage: self username , self password) hex.
+			"-- Hash field: MD5 hex digest of concatenated username & password ---"
+			hash := (MD5 new hashMessage: self username , self password) hex.
 
-	"set up buffer"
-	buffer := ByteArray new writeStream.
+			"set up buffer"
+			buffer := ByteArray new writeStream.
 
-	"fill buffer"
-	buffer
-		nextPutAll: (1 asSoulSeekByteArrayOfSize: 4);
-		nextPutAll: (self username size asSoulSeekByteArrayOfSize: 4);
-		nextPutAll: self username asByteArray;
-		nextPutAll: (self password size asSoulSeekByteArrayOfSize: 4);
-		nextPutAll: self password asByteArray;
-		"<--- Major version of SoulSeek --->"
-		nextPutAll: (157 asSoulSeekByteArrayOfSize: 4);
-		nextPutAll: (hash size asSoulSeekByteArrayOfSize: 4);
-		nextPutAll: hash asByteArray;
-		"<--- Minor version of SoulSeek --->"		
-		nextPutAll: (100 asSoulSeekByteArrayOfSize: 4).
-	self sendMessage: buffer contents
+			"fill buffer"
+			buffer
+				nextPutAll: (1 asSoulSeekByteArrayOfSize: 4);
+				nextPutAll: (self username size asSoulSeekByteArrayOfSize: 4);
+				nextPutAll: self username asByteArray;
+				nextPutAll: (self password size asSoulSeekByteArrayOfSize: 4);
+				nextPutAll: self password asByteArray;
+				"<--- Major version of SoulSeek --->"
+					nextPutAll: (157 asSoulSeekByteArrayOfSize: 4);
+				nextPutAll: (hash size asSoulSeekByteArrayOfSize: 4);
+				nextPutAll: hash asByteArray;
+				"<--- Minor version of SoulSeek --->"
+					nextPutAll: (100 asSoulSeekByteArrayOfSize: 4).
+			self sendMessage: buffer contents ]
 ]
 
 { #category : #'world menu' }
@@ -187,6 +175,12 @@ ClariceApp class >> menuCommandOn: aBuilder [
 		action: [ (SettingBrowser forKeywords: #('claricesettings')) open ]
 ]
 
+{ #category : #'instance creation' }
+ClariceApp class >> new [
+	self error: 'ClariceApp is a singleton -- send uniqueInstance instead'
+
+]
+
 { #category : #accessing }
 ClariceApp class >> password [
 	^ Password
@@ -195,6 +189,25 @@ ClariceApp class >> password [
 { #category : #accessing }
 ClariceApp class >> password: aString [
 	Password := aString
+]
+
+{ #category : #'as yet unclassified' }
+ClariceApp class >> popUp: aContent [
+GrowlMorph
+				openWithLabel: 'Clarice'
+				contents: aContent 
+]
+
+{ #category : #initialization }
+ClariceApp class >> reset [
+	self connected
+		ifTrue: [ self popUp: 'Disconnecting from SoulSeek'.self serverSocket close ].
+	UniqueInstance := nil
+]
+
+{ #category : #running }
+ClariceApp class >> run [
+	self connect;serverResponseProcessService: ClariceServerResponseService new
 ]
 
 { #category : #'as yet unclassified' }
@@ -253,6 +266,11 @@ ClariceApp class >> serverSocket: aSocketStream [
 ClariceApp class >> startUp [
 	WorldState desktopMenuTitle: 'Clarice'.
 "	PasteUpMorph shouldShowWorldMenu: false"
+]
+
+{ #category : #'instance creation' }
+ClariceApp class >> uniqueInstance [
+	^ UniqueInstance ifNil: [ UniqueInstance := super new ]
 ]
 
 { #category : #accessing }
