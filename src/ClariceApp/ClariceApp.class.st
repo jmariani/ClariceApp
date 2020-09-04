@@ -89,7 +89,7 @@ ClariceApp class >> clariceUserInfoSettingsOn: aBuilder [
 
 { #category : #ssl }
 ClariceApp class >> connect [
-	self
+	ClariceHelper 
 		popUp:
 			'Connecting to ' , self serverName , ' using port '
 				, self serverPort asString.
@@ -100,7 +100,7 @@ ClariceApp class >> connect [
 				openConnectionToHostNamed: self serverName
 				port: self serverPort).
 	self connected
-		ifFalse: [ self
+		ifFalse: [ ClariceHelper
 				popUp:
 					'Failed to connect to ' , self serverName , ' using port '
 						, self serverPort asString ]
@@ -108,8 +108,8 @@ ClariceApp class >> connect [
 			self serverSocket
 				binary;
 				autoFlush: true.
-	self
-		popUp:
+			ClariceHelper
+				popUp:
 					'Connected to ' , self serverName , ' using port '
 						, self serverPort asString ]
 ]
@@ -137,7 +137,7 @@ ClariceApp class >> listeningPort: aNumber [
 ClariceApp class >> login [
 	| buffer hash |
 	self connected
-		ifFalse: [ self popUp: 'Socket not connected. Unable to login' ]
+		ifFalse: [ ClariceHelper popUp: 'Socket not connected. Unable to login' ]
 		ifTrue: [ 	self
 		popUp:
  'Logging in as ' , self username , ' with ' , self password.
@@ -191,17 +191,11 @@ ClariceApp class >> password: aString [
 	Password := aString
 ]
 
-{ #category : #'as yet unclassified' }
-ClariceApp class >> popUp: aContent [
-GrowlMorph
-				openWithLabel: 'Clarice'
-				contents: aContent 
-]
-
 { #category : #initialization }
 ClariceApp class >> reset [
 	self connected
-		ifTrue: [ self popUp: 'Disconnecting from SoulSeek'.self serverSocket close ].
+		ifTrue: [ ClariceHelper popUp: 'Disconnecting from SoulSeek'.
+			self serverSocket close ].
 	UniqueInstance := nil
 ]
 
