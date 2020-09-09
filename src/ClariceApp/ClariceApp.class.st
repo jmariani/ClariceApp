@@ -118,11 +118,6 @@ ClariceApp class >> connect [
 ClariceApp class >> connected [ 	^ ServerSocket isConnected
 ]
 
-{ #category : #'class initialization' }
-ClariceApp class >> initialize [
-self serverResponseProcessService: ClariceServerResponseService new
-]
-
 { #category : #'as yet unclassified' }
 ClariceApp class >> listeningPort [
 	^ ListeningPort

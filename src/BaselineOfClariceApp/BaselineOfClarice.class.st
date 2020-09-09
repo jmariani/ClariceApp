@@ -8,8 +8,8 @@ Class {
 BaselineOfClarice class >> baseline: spec [
 	<baseline>
 	spec
-		baseline: 'TaskIt'
-		with: [ spec repository: 'github://pharo-contributions/taskit' ].
+		baseline: 'Scheduler'
+		with: [ spec repository: 'github://pharo-contributions/Scheduler/src' ].
 	spec
 		for: #common
 		do: [ "Packages"
