@@ -1,12 +1,34 @@
-Extension { #name : #SocketStream }
+"
+I am a subclass of the SocketStream class.
 
-{ #category : #'*ClariceApp' }
-SocketStream >> loginAs: anUser using: aPassword [
+I implement an instance of TaskScheduler to monitor the receiving of data from the endpoint.
+
+
+"
+Class {
+	#name : #SoulSeekSocketStream,
+	#superclass : #SocketStream,
+	#instVars : [
+		'scheduler'
+	],
+	#category : #ClariceApp
+}
+
+{ #category : #initialization }
+SoulSeekSocketStream >> initialize [
+	super initialize.
+	socket := Socket newTCP.
+	binary.
+	scheduler := TaskScheduler new
+]
+
+{ #category : #'as yet unclassified' }
+SoulSeekSocketStream >> loginAs: anUser using: aPassword [
 	| buffer hash |
-	socket
+	self socket
 		ifNil:
 			[ ClariceHelper popUp: 'Server Socket not connected. Unable to login.' ]
-		ifNotNil: [socket isConnected
+		ifNotNil: [ self isConnected
 				ifFalse:
 					[ ClariceHelper popUp: 'Server Socket not connected. Unable to login.' ]
 				ifTrue: [ ClariceHelper
@@ -28,44 +50,22 @@ SocketStream >> loginAs: anUser using: aPassword [
 				nextPutAll: hash asByteArray;
 				"<--- Minor version of SoulSeek --->"
 					nextPutAll: (100 asSoulSeekByteArrayOfSize: 4).
-			self sendMessageToSoulSeekServer: buffer contents ]
+			 self sendMessageToSoulSeekServer: buffer contents ]
 ]
 
-{ #category : #'*ClariceApp' }
-SocketStream >> processSoulSeekServerResponse [
-	| chunk response responseCode responseSize |
-	"<--- check if there's data available --->"
-	self isDataAvailable
-		ifTrue: [ chunk := self next: 4.
-			responseSize := chunk reverse asInteger - 4.
-			chunk := self next: 4.
-			responseCode := chunk reverse asInteger.
-			response := self next: responseSize.
-			Transcript
-				trace:
-					'Message code ' , responseCode asString , ' received. Size: '
-						, responseSize asString,' Response: ',response;
-				cr.
-			ClariceHelper
-				popUp:
-					'Received message code: ' , responseCode asString , ' - Size: '
-						, responseSize asString ]
-]
-
-{ #category : #'*ClariceApp' }
-SocketStream >> sendMessageToSoulSeekServer: aMessageEncoded [
+{ #category : #'as yet unclassified' }
+SoulSeekSocketStream >> sendMessageToSoulSeekServer: aMessageEncoded [
 	"I send messages to the SoulSeek server"
 
 	"--- Send the buffer to the server ---"
-
-	self 
+	self
 		nextPutAll: (aMessageEncoded size asSoulSeekByteArrayOfSize: 4);
 		nextPutAll: aMessageEncoded.
-	self flush
+		self flush
 ]
 
-{ #category : #'*ClariceApp' }
-SocketStream >> setSoulSeekClientListeningPort: aPort [
+{ #category : #initialization }
+SoulSeekSocketStream >> setSoulSeekClientListeningPort: aPort [
 	| buffer |
 	"set up buffer"
 	buffer := ByteArray new writeStream.
@@ -74,5 +74,10 @@ SocketStream >> setSoulSeekClientListeningPort: aPort [
 	buffer
 		nextPutAll: (2 asSoulSeekByteArrayOfSize: 4);
 		nextPutAll: (aPort asSoulSeekByteArrayOfSize: 4).
-	^ buffer contents
+				self sendMessageToSoulSeekServer: buffer contents
+]
+
+{ #category : #'as yet unclassified' }
+SoulSeekSocketStream >> waitForConnectionFor: seconds onObfuscatedPort: aPort [
+	socket port: aPort waitForConnectionFor: seconds
 ]
